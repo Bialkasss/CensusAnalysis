@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Census Data Analysis Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            padding: 30px 20px;
+            border-right: 1px solid #dee2e6;
+        }
+
+        .analysis-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .analysis-btn {
+            background: white;
+            border: 2px solid #e9ecef;
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: #495057;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .analysis-btn:hover {
+            border-color: #007bff;
+            color: #007bff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,123,255,0.2);
+        }
+
+        .analysis-btn.active {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border-color: #0056b3;
+        }
+
+        .content-area {
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .dataset-info {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .dataset-info h3 {
+            color: #1565c0;
+            margin-bottom: 10px;
+        }
+
+        .results-container {
+            display: none;
+        }
+
+        .results-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-header {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .results-header h2 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .results-header p {
+            color: #6c757d;
+            font-size: 1.1em;
+        }
+
+        .data-table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .data-table h3 {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            margin: 0;
+            color: #495057;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .number {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: #6c757d;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-right: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .controls label {
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .controls input {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            width: 80px;
+        }
+
+        .refresh-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #218838;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                padding: 20px;
+            }
+            
+            .analysis-buttons {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .analysis-btn {
+                padding: 10px 15px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Census Data Analysis Dashboard</h1>
+            <p>Interactive analysis of demographic and economic patterns</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="analysis-buttons">
+                    <button class="analysis-btn" data-analysis="occupation">
+                        📊 Occupation Analysis
+                    </button>
+                    <button class="analysis-btn" data-analysis="education">
+                        🎓 Education Analysis
+                    </button>
+                    <button class="analysis-btn" data-analysis="work_hours">
+                        ⏰ Work Hours Analysis
+                    </button>
+                    <button class="analysis-btn" data-analysis="demographics">
+                        👥 Demographics Analysis
+                    </button>
+                    <button class="analysis-btn" data-analysis="geographic">
+                        🌍 Geographic Analysis
+                    </button>
+                    <button class="analysis-btn" data-analysis="comprehensive">
+                        🔬 Comprehensive Analysis
+                    </button>
+                    <button class="analysis-btn" data-analysis="recommendations">
+                        💡 Recommendations
+                    </button>
+                </div>
+            </div>
+            
+            <div class="content-area">
+                <div class="dataset-info">
+                    <h3>Dataset Information</h3>
+                    <div id="dataset-info-content">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            Loading dataset information...
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <label for="recordLimit">Records to show:</label>
+                    <input type="number" id="recordLimit" value="20" min="5" max="100">
+                    <button class="refresh-btn" onclick="refreshCurrentAnalysis()">Refresh</button>
+                </div>
+                
+                <div id="results-area">
+                    <div class="results-container active">
+                        <div class="results-header">
+                            <h2>Welcome to Census Data Analysis</h2>
+                            <p>Select an analysis type from the sidebar to begin exploring the data.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAnalysis = null;
+
+        // Load dataset info on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDatasetInfo();
+            
+            // Add click handlers to analysis buttons
+            document.querySelectorAll('.analysis-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const analysisType = this.dataset.analysis;
+                    loadAnalysis(analysisType);
+                    
+                    // Update active button
+                    document.querySelectorAll('.analysis-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        });
+
+        async function loadDatasetInfo() {
+            try {
+                const response = await fetch('/api/dataset_info');
+                const data = await response.json();
+                
+                if (data.error) {
+                    document.getElementById('dataset-info-content').innerHTML = 
+                        `<div class="error">Error: ${data.error}</div>`;
+                } else {
+                    document.getElementById('dataset-info-content').innerHTML = `
+                        <p><strong>Total Records:</strong> ${data.total_records.toLocaleString()}</p>
+                        <p><strong>Columns:</strong> ${data.schema.length}</p>
+                        <details>
+                            <summary>Schema Details</summary>
+                            <ul>
+                                ${data.schema.map(field => `<li><strong>${field.name}:</strong> ${field.type}</li>`).join('')}
+                            </ul>
+                        </details>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('dataset-info-content').innerHTML = 
+                    `<div class="error">Failed to load dataset info: ${error.message}</div>`;
+            }
+        }
+
+        async function loadAnalysis(analysisType) {
+            currentAnalysis = analysisType;
+            const resultsArea = document.getElementById('results-area');
+            const recordLimit = document.getElementById('recordLimit').value;
+            
+            // Show loading
+            resultsArea.innerHTML = `
+                <div class="results-container active">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading ${analysisType} analysis...
+                    </div>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(`/api/analyze/${analysisType}?n=${recordLimit}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    resultsArea.innerHTML = `
+                        <div class="results-container active">
+                            <div class="error">Error: ${data.error}</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Render results based on analysis type
+                renderResults(data, analysisType);
+                
+            } catch (error) {
+                resultsArea.innerHTML = `
+                    <div class="results-container active">
+                        <div class="error">Failed to load analysis: ${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderResults(data, analysisType) {
+            const resultsArea = document.getElementById('results-area');
+            
+            let html = `
+                <div class="results-container active">
+                    <div class="results-header">
+                        <h2>${data.title}</h2>
+                        <p>${data.description}</p>
+                    </div>
+            `;
+            
+            // Handle different analysis types
+            switch(analysisType) {
+                case 'education':
+                    html += renderTable('Education Statistics', data.education_data);
+                    html += renderTable('Education-Occupation Combinations', data.education_occupation_data);
+                    break;
+                    
+                case 'demographics':
+                    html += renderTable('Gender Statistics', data.gender_data);
+                    html += renderTable('Marital Status Statistics', data.marital_data);
+                    html += renderTable('Age Group Statistics', data.age_data);
+                    break;
+                    
+                case 'recommendations':
+                    html += renderTable('Career Recommendations', data.career_data);
+                    html += renderTable('Work-Life Balance Recommendations', data.balance_data);
+                    html += renderTable('Capital Analysis', data.capital_data);
+                    break;
+                    
+                default:
+                    html += renderTable('Analysis Results', data.data);
+            }
+            
+            html += '</div>';
+            resultsArea.innerHTML = html;
+        }
+
+        function renderTable(title, data) {
+            if (!data || data.length === 0) {
+                return `<div class="data-table">
+                    <h3>${title}</h3>
+                    <p style="padding: 20px;">No data available</p>
+                </div>`;
+            }
+            
+            const headers = Object.keys(data[0]);
+            
+            let html = `
+                <div class="data-table">
+                    <h3>${title}</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                ${headers.map(header => `<th>${formatHeader(header)}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            data.forEach(row => {
+                html += '<tr>';
+                headers.forEach(header => {
+                    const value = row[header];
+                    const cellClass = typeof value === 'number' ? 'number' : '';
+                    const formattedValue = typeof value === 'number' ? 
+                        (value % 1 === 0 ? value.toLocaleString() : value.toFixed(2)) : 
+                        value;
+                    html += `<td class="${cellClass}">${formattedValue}</td>`;
+                });
+                html += '</tr>';
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            return html;
+        }
+
+        function formatHeader(header) {
+            return header.replace(/_/g, ' ')
+                        .replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function refreshCurrentAnalysis() {
+            if (currentAnalysis) {
+                loadAnalysis(currentAnalysis);
+            }
+        }
+    </script>
+</body>
+</html>
