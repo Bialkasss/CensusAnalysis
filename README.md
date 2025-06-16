@@ -98,15 +98,6 @@ Once started, access the application at:
 ```
 http://localhost:8888
 ```
-### Available Analyses
-
-1. **Occupation Analysis** - Income patterns by profession
-2. **Education Analysis** - Education impact on career success
-3. **Work Hours Analysis** - Work-life balance patterns
-4. **Demographics Analysis** - Age, gender, and marital status insights
-5. **Geographic Analysis** - Regional income variations
-6. **Comprehensive Analysis** - Multi-dimensional cross-analysis
-7. **Recommendations** - AI-driven career and investment suggestions
    
 ## 📊 Application Screenshots
 
