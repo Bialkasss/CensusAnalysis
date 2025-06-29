@@ -59,8 +59,14 @@ export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
 # Python Path
 export PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-0.10.9.5-src.zip:$PYTHONPATH
 ```
+### 2. Run hdfs and yarn in both master and all slaves
 
-### 2. Data Preparation
+```bash
+start-dfs.sh
+start-yarn.sh
+```
+
+### 3. Data Preparation
 
 Place your census data file in HDFS:
 ```bash
@@ -72,7 +78,7 @@ hdfs dfs -put adults_data.csv /opt/code/adults_data.csv
 - age, workclass, education, marital_status, occupation, relationship, race, sex
 - capital_gain, capital_loss, hours_per_week, native_country, income
 
-### 3. Running the Application
+### 4. Running the Application
 
 Use the provided startup script:
 
@@ -88,11 +94,11 @@ export PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-0.10.9.5-src.zi
 # Install Flask if not already installed
 pip3 install Flask
 
-# Start the Flask app
+# Start the Flask app (from its folder)
 python3 app.py
 ```
 
-### 4. Access the Dashboard
+### 5. Access the Dashboard
 
 Once started, access the application at:
 ```
